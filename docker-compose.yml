@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx-self-signed
+    build:
+      context: ./nginx-self-signed
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      test-network:
+        aliases:
+          - nginx.avb
+
+  node-app:
+    image: node-app
+    build:
+      context: ./node-app
+    container_name: node-app
+    environment:
+      - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/self-signed.crt
+    volumes:
+      - ./certs/self-signed.crt:/usr/local/share/ca-certificates/self-signed.crt:ro
+    networks:
+      test-network:
+        aliases:
+          - node-app.avb
+    depends_on:
+      - nginx
+
+networks:
+  test-network:
+    driver: bridge
